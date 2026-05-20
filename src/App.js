@@ -136,9 +136,6 @@ function SetupTab() {
   const [preview, setPreview] = useState("");
   const [previewing, setPreviewing] = useState(false);
 
-  const SLOT_SEND_TIMES = {
-    lunch: "11:30", evening: "16:30", dinner: "18:30", bedtime: "20:30",
-  };
   const SLOT_LABELS = {
     lunch: "Lunch (sends 11:30 AM)", evening: "Evening (sends 4:30 PM)",
     dinner: "Dinner (sends 6:30 PM)", bedtime: "Bedtime (sends 8:30 PM)",
