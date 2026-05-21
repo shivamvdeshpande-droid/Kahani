@@ -183,6 +183,17 @@ Format: Title first, then story, then moral. No markdown.`;
   async function handleActivate() {
     if (!email1 || !email2 || storyTimes.length === 0) return;
     setStatus("active");
+
+    const story = await generateStory();
+    await fetch('/api/send-story', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        emails: [email1, email2],
+        story,
+        childName: childName || 'your little one',
+      }),
+    });
   }
 
   const isActive = status === "active";
