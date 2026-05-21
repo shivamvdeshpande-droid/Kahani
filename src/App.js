@@ -144,32 +144,6 @@ const SLOT_LABELS = {
     setArr(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val]);
   }
 
-  async function generateStory() {
-    const dimLabels = CHARACTER_DIMENSIONS_FOR_IDS(dims);
-    const charLabels = FAV_CHARACTERS.filter(c => chars.includes(c.id)).map(c => c.label).join(", ") || "any";
-    const prompt = `Write a bedtime story for a 2-4 year old child named ${childName || "the child"}.
-Character values to develop: ${dimLabels || "kindness and courage"}.
-Favourite characters or themes: ${charLabels}.
-Themes: Indian mythology, animals, or moral tales (pick what fits best).
-Rules:
-- 150-200 words max
-- Very simple, soothing language
-- Warm and imaginative
-- End with: ✨ Moral: [one line]
-Format: Title first, then story, then moral. No markdown.`;
-
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-    const data = await res.json();
-    return data.content?.[0]?.text || "Could not generate story.";
-  }
 
   function CHARACTER_DIMENSIONS_FOR_IDS(ids) {
     return CHARACTER_DIMS.filter(d => ids.includes(d.id)).map(d => d.label).join(", ");
@@ -179,8 +153,15 @@ Format: Title first, then story, then moral. No markdown.`;
     setPreviewing(true);
     setPreview("");
     try {
-      const s = await generateStory();
-      setPreview(s);
+      const dimLabels = CHARACTER_DIMS.filter(d => dims.includes(d.id)).map(d => d.label).join(", ");
+      const charLabels = FAV_CHARACTERS.filter(c => chars.includes(c.id)).map(c => c.label).join(", ");
+      const res = await fetch('/api/preview-story', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childName, dims: dimLabels, chars: charLabels }),
+      });
+      const data = await res.json();
+      setPreview(data.story || "Could not generate preview.");
     } catch(e) {
       setPreview("Could not generate preview. Please try again.");
     }
@@ -191,18 +172,21 @@ Format: Title first, then story, then moral. No markdown.`;
     if (!email1 || !email2 || storyTimes.length === 0) return;
     setStatus("sending");
     try {
-      const story = await generateStory();
-      await fetch('/api/send-story', {
+      const dimLabels = CHARACTER_DIMS.filter(d => dims.includes(d.id)).map(d => d.label).join(", ");
+      const charLabels = FAV_CHARACTERS.filter(c => chars.includes(c.id)).map(c => c.label).join(", ");
+      const res = await fetch('/api/send-story', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           emails: [email1, email2],
-          story,
           childName: childName || 'your little one',
+          dims: dimLabels,
+          chars: charLabels,
         }),
       });
+      const data = await res.json();
       setStatus("active");
-      setPreview(story);
+      setPreview(data.story || "");
     } catch(e) {
       setStatus("idle");
     }
