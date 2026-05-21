@@ -178,28 +178,38 @@ Format: Title first, then story, then moral. No markdown.`;
   async function handlePreview() {
     setPreviewing(true);
     setPreview("");
-    const s = await generateStory();
-    setPreview(s);
+    try {
+      const s = await generateStory();
+      setPreview(s);
+    } catch(e) {
+      setPreview("Could not generate preview. Please try again.");
+    }
     setPreviewing(false);
   }
 
   async function handleActivate() {
     if (!email1 || !email2 || storyTimes.length === 0) return;
-    setStatus("active");
-
-    const story = await generateStory();
-    await fetch('/api/send-story', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        emails: [email1, email2],
-        story,
-        childName: childName || 'your little one',
-      }),
-    });
+    setStatus("sending");
+    try {
+      const story = await generateStory();
+      await fetch('/api/send-story', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          emails: [email1, email2],
+          story,
+          childName: childName || 'your little one',
+        }),
+      });
+      setStatus("active");
+      setPreview(story);
+    } catch(e) {
+      setStatus("idle");
+    }
   }
 
-  const isActive = status === "active";
+  const isActive = status === "active" || status === "sending";
+  const isReady = email1 && email2 && storyTimes.length > 0;
 
   return (
     <div style={{ padding: "24px 20px 100px" }}>
@@ -325,11 +335,11 @@ Format: Title first, then story, then moral. No markdown.`;
       <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
         {!isActive ? (
           <>
-            <button className="btn-gold" onClick={handleActivate} style={{ flex: 1 }} disabled={!email1 || !email2 || storyTimes.length === 0}>
-                ✨ Subscribe to the Kahani
+            <button className="btn-gold" onClick={handleActivate} style={{ flex: 1 }} disabled={!isReady || status === "sending"}>
+                {status === "sending" ? "Sending your first story…" : "✨ Subscribe to the Kahani"}
               </button>
-            <button className="btn-ghost" onClick={handlePreview} disabled={previewing}>
-              {previewing ? "…" : "Preview"}
+            <button className="btn-ghost" onClick={handlePreview} disabled={previewing || !isReady}>
+              {previewing ? "Generating…" : "Preview"}
             </button>
           </>
         ) : (
@@ -340,7 +350,7 @@ Format: Title first, then story, then moral. No markdown.`;
             display: "flex", alignItems: "center", gap: 10,
           }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4cde8a", display: "inline-block", animation: "pulse 1.5s infinite" }} />
-            {storyTimes.length} stor{storyTimes.length > 1 ? "ies" : "y"} scheduled daily
+            Subscribed! 🎉 Next stor{storyTimes.length > 1 ? "ies" : "y"} 30 min before {storyTimes.map(id => SLOT_LABELS[id].split(' ')[0]).join(', ')}
             <button className="btn-ghost" onClick={() => setStatus("idle")} style={{ marginLeft: "auto", fontSize: 12, padding: "6px 12px" }}>Stop</button>
           </div>
         )}
