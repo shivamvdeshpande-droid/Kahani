@@ -272,7 +272,7 @@ Format: Title first, then story, then moral. No markdown.`;
             <Toggle
               key={t.id}
               selected={storyTimes.includes(t.id)}
-              onToggle={() => !isActive && toggle(storyTimes, setStoryTimes, t.id)}
+              onToggle={() => toggle(storyTimes, setStoryTimes, t.id)}
               label={t.label}
               emoji={t.emoji}
               sub={t.sub}
