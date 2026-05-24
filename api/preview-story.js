@@ -1,10 +1,11 @@
-const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { childName, dims, chars } = req.body;
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const prompt = `Write a bedtime story for a 2-4 year old child named ${childName || "the child"}.
 Character values to develop: ${dims || "kindness and courage"}.
@@ -18,12 +19,8 @@ Rules:
 Format: Title first, then story, then moral. No markdown.`;
 
   try {
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      max_tokens: 1000,
-      messages: [{ role: "user", content: prompt }]
-    });
-    const story = response.choices?.[0]?.message?.content || "Could not generate story.";
+    const result = await model.generateContent(prompt);
+    const story = result.response.text();
     res.status(200).json({ story });
   } catch(e) {
     res.status(500).json({ error: e.message });
