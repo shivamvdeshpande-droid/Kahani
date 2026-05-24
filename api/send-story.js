@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
   const { emails, childName, dims, chars } = req.body;
   const resend = new Resend(process.env.RESEND_API_KEY);
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   const prompt = `Write a bedtime story for a 2-4 year old child named ${childName || "the child"}.
 Character values to develop: ${dims || "kindness and courage"}.
