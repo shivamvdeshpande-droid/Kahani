@@ -1,11 +1,7 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { childName, dims, chars } = req.body;
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   const prompt = `Write a bedtime story for a 2-4 year old child named ${childName || "the child"}.
 Character values to develop: ${dims || "kindness and courage"}.
@@ -15,12 +11,24 @@ Rules:
 - 150-200 words max
 - Very simple, soothing language
 - Warm and imaginative
-- End with: ✨ Moral: [one line]
+- End with: Moral: [one line]
 Format: Title first, then story, then moral. No markdown.`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const story = result.response.text();
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const story = data.choices?.[0]?.message?.content || "Could not generate story.";
     res.status(200).json({ story });
   } catch(e) {
     res.status(500).json({ error: e.message });
