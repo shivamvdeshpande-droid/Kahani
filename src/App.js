@@ -169,16 +169,33 @@ const SLOT_LABELS = {
   }
 
   async function handleActivate() {
-    if (!email1 || !email2 || storyTimes.length === 0) return;
+    if (!email1 || storyTimes.length === 0) return;
     setStatus("sending");
     try {
       const dimLabels = CHARACTER_DIMS.filter(d => dims.includes(d.id)).map(d => d.label).join(", ");
       const charLabels = FAV_CHARACTERS.filter(c => chars.includes(c.id)).map(c => c.label).join(", ");
+
+      // Save to Airtable
+      await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email1,
+          email2,
+          childName: childName || 'your little one',
+          dims: dimLabels,
+          chars: charLabels,
+          storyTimes: storyTimes.join(', '),
+        }),
+      });
+
+      // Send first story immediately
+      const validEmails = [email1, email2].filter(e => e && e.trim() !== '');
       const res = await fetch('/api/send-story', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          emails: [email1, email2],
+          emails: validEmails,
           childName: childName || 'your little one',
           dims: dimLabels,
           chars: charLabels,
