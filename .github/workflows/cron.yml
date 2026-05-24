@@ -1,0 +1,18 @@
+name: Kahani Daily Stories
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 11:30 AM IST (lunch)
+    - cron: '0 11 * * *'  # 4:30 PM IST (evening)
+    - cron: '0 13 * * *'  # 6:30 PM IST (dinner)
+    - cron: '0 15 * * *'  # 8:30 PM IST (bedtime)
+
+jobs:
+  send-stories:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Kahani cron
+        run: |
+          curl -X POST "https://kahani-liard.vercel.app/api/cron-send" \
+          -H "Authorization: Bearer kahani2024secret" \
+          -H "Content-Type: application/json"
