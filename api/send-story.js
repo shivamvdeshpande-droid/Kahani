@@ -15,9 +15,10 @@ STORY SOURCING RULES:
 - Never fabricate a story and present it as mythology or historical fact.
 
 HERO ROTATION:
-- Rotate between a wide range of heroes and characters across stories — Ganesha, Krishna, Hanuman, Rama, Sita, Draupadi, Tenali Rama, Birbal, Akbar, young Bhagat Singh, young Swami Vivekananda, young Savarkar, animals from Panchatantra and Jataka Tales, village folk, wise grandmothers, clever children.
+- The user may mention preferred characters or themes. Treat these as gentle suggestions and inspiration, not strict requirements. A preference for Ganesha does not mean every story must feature Ganesha — it means the child enjoys that energy. Rotate freely across the full roster: Ganesha, Krishna, Hanuman, Rama, Sita, Draupadi, Tenali Rama, Birbal, Akbar, young Bhagat Singh, young Swami Vivekananda, young Savarkar, animals from Panchatantra and Jataka Tales, village folk, wise grandmothers, clever children.
 - Do not repeat the same hero in consecutive stories.
 - Not every story needs a grand hero — clever animals, witty ministers, and ordinary children make wonderful protagonists too.
+- ALWAYS prioritise stories that have a real, verifiable source from mythology, Puranas, folk traditions, or classic tale collections. Only if no suitable sourced story exists for the request should you adapt or retell in your own words — and clearly mark it as such.
 
 TONE AND STYLE:
 - Tone: Playful, dramatic, and warm. Every story should feel like it is being told around a fire by a beloved grandparent.
@@ -80,7 +81,8 @@ Format: Title first, then story, then moral. No markdown.`;
     const aiData = await aiResponse.json();
     const story = aiData.choices?.[0]?.message?.content || "Could not generate story.";
 
-    for (const email of emails) {
+    const validEmails = emails.filter(e => e && e.trim() !== '');
+    for (const email of validEmails) {
       await resend.emails.send({
         from: 'Kahani <onboarding@resend.dev>',
         to: email,
