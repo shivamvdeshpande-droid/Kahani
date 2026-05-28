@@ -14,6 +14,6 @@ jobs:
     steps:
       - name: Trigger Kahani cron
         run: |
-          curl -X POST "https://kahani-liard.vercel.app/api/cron-send" \
+          curl -X POST "https://kahani-liard.vercel.app/api/cron_send" \
           -H "Authorization: Bearer kahani2024secret" \
           -H "Content-Type: application/json"
