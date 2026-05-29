@@ -65,18 +65,21 @@ module.exports = async (req, res) => {
   const istHour = (now.getUTCHours() + 5) % 24;
 
   // Find which slot this hour matches (30 min before = slot hour - 1 roughly)
-  const currentSlot = Object.entries(SLOT_TIMES).find(([_, hour]) => {
+  const activeSlot = Object.entries(SLOT_TIMES).find(([_, hour]) => {
     return istHour === hour - 1 || istHour === hour;
   })?.[0];
 
-  if (!currentSlot) {
+  const forceSlot = req.body && req.body.forceSlot;
+  const activeSlot = forceSlot || activeSlot;
+
+  if (!activeSlot) {
     return res.status(200).json({ message: 'No slot for this hour' });
   }
 
   try {
     // Get all active subscribers for this slot
     const records = await base('Subscribers').select({
-      filterByFormula: `AND({Active}, FIND("${currentSlot}", {StoryTimes}))`
+      filterByFormula: `AND({Active}, FIND("${activeSlot}", {StoryTimes}))`
     }).all();
 
     for (const record of records) {
@@ -122,7 +125,7 @@ module.exports = async (req, res) => {
       }
     }
 
-    res.status(200).json({ success: true, slot: currentSlot, subscribers: records.length });
+    res.status(200).json({ success: true, slot: activeSlot, subscribers: records.length });
   } catch(e) {
     res.status(500).json({ error: e.message });
   }
