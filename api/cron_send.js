@@ -65,7 +65,7 @@ module.exports = async (req, res) => {
   const istHour = (now.getUTCHours() + 5) % 24;
 
   // Find which slot this hour matches (30 min before = slot hour - 1 roughly)
-  const activeSlot = Object.entries(SLOT_TIMES).find(([_, hour]) => {
+  const currentSlot = Object.entries(SLOT_TIMES).find(([_, hour]) => {
     return istHour === hour - 1 || istHour === hour;
   })?.[0];
 
