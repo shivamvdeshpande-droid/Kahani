@@ -70,7 +70,7 @@ module.exports = async (req, res) => {
   })?.[0];
 
   const forceSlot = req.body && req.body.forceSlot;
-  const activeSlot = forceSlot || activeSlot;
+  const activeSlot = forceSlot || currentSlot;
 
   if (!activeSlot) {
     return res.status(200).json({ message: 'No slot for this hour' });
