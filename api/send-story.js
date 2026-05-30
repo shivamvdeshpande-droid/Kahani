@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const { emails, childName, dims, chars } = req.body;
+    const { emails, childName, dims, chars, language } = req.body;
 
     if (!emails || emails.length === 0) return res.status(400).json({ error: "Email is required" });
 
@@ -63,7 +63,9 @@ Rewrite this story in simpler, warmer words. Address the child as "${childName |
 
 End with:
 🌙 Moral: ${story.moral}
-📖 Source: ${story.source}`;
+📖 Source: ${story.source}
+
+${language && language !== 'English' ? `Now translate the entire story above into ${language}. Keep all character names unchanged. Use simple natural ${language} a parent would speak to a young child. Use proper ${language} script, not transliteration. Keep the moral and source lines in ${language} too.` : ''}`;
 
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",

@@ -158,7 +158,7 @@ const SLOT_LABELS = {
       const res = await fetch('/api/preview-story', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childName, dims: dimLabels, chars: charLabels }),
+        body: JSON.stringify({ childName, dims: dimLabels, chars: charLabels, language }),
       });
       const data = await res.json();
       setPreview(data.story || "Could not generate preview.");
@@ -186,6 +186,7 @@ const SLOT_LABELS = {
           dims: dimLabels,
           chars: charLabels,
           storyTimes: storyTimes.join(', '),
+          language,
         }),
       });
 
@@ -198,7 +199,12 @@ const SLOT_LABELS = {
           emails: validEmails,
           childName: childName || 'your little one',
           dims: dimLabels,
-          chars: charLabels,
+                  }),
+      });
+      const data = await res.json();
+      setStatus("active");
+chars: charLabels,
+          language,
         }),
       });
       const data = await res.json();
