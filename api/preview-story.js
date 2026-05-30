@@ -4,6 +4,45 @@ const storyBank = require("./storyBank");
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+function pickStory(chars, dims) {
+  // Normalise inputs to lowercase arrays
+  const charList = (chars || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
+  const dimList = (dims || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
+
+  // Score each story by how many user preferences it matches
+  const scored = storyBank.map(story => {
+    const storyText = [
+      story.hero,
+      story.theme,
+      story.moral,
+      ...(story.tags || [])
+    ].join(" ").toLowerCase();
+
+    let score = 0;
+    for (const c of charList) {
+      if (c === "surprise") continue; // skip "Surprise me!"
+      if (storyText.includes(c)) score += 2; // character match weighted higher
+    }
+    for (const d of dimList) {
+      if (storyText.includes(d)) score += 1;
+    }
+    return { story, score };
+  });
+
+  // Filter to stories with at least one match
+  const matches = scored.filter(s => s.score > 0);
+
+  // If matches found, pick randomly from top scorers
+  if (matches.length > 0) {
+    const maxScore = Math.max(...matches.map(s => s.score));
+    const topMatches = matches.filter(s => s.score === maxScore);
+    return topMatches[Math.floor(Math.random() * topMatches.length)].story;
+  }
+
+  // Fallback: fully random
+  return storyBank[Math.floor(Math.random() * storyBank.length)];
+}
+
 module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -13,20 +52,17 @@ module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const { childName, childAge, values, characters } = req.body;
+    const { childName, dims, chars } = req.body;
 
-    // Pick a random story from the bank
-    const story = storyBank[Math.floor(Math.random() * storyBank.length)];
+    const story = pickStory(chars, dims);
 
     const prompt = `You are a warm, gentle storyteller helping a parent read a bedtime story to their child.
 
-Here is the child's details:
-- Name: ${childName || "little one"}
-- Age: ${childAge || "3"} years old
-- Values the parent cares about: ${values || "kindness, courage"}
-- Favourite characters: ${characters || "none specified"}
+Child's name: ${childName || "little one"}
+Values the parent cares about: ${dims || "kindness, courage"}
+Favourite characters: ${chars || "none specified"}
 
-Here is the original story — do NOT change the plot, characters, moral, or source. Only simplify the language so a ${childAge || "3"}-year-old can understand it when a parent reads it aloud. Keep all the interactive cues (in parentheses) exactly as they are.
+Here is the original story. Do NOT change the plot, characters, moral, or source. Only simplify the language so a young child can understand it when a parent reads it aloud. Keep all interactive cues (in parentheses) exactly as they are.
 
 Story title: ${story.title}
 Source: ${story.source}
@@ -37,7 +73,7 @@ ${story.content}
 
 ---
 
-Now rewrite this story in simpler, warmer words for a ${childAge || "3"}-year-old. Address the child as "${childName || "little one"}" once at the start. Keep it short — under 300 words. Keep the moral, the interactive cues, and the ending intact. Do not invent new plot points.
+Rewrite this story in simpler, warmer words. Address the child as "${childName || "little one"}" once at the start. Keep it under 300 words. Keep the moral, interactive cues, and ending intact. Do not invent new plot points.
 
 End with:
 🌙 Moral: ${story.moral}
