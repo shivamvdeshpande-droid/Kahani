@@ -1,106 +1,101 @@
-const { Resend } = require('resend');
+// api/send-story.js
+const Groq = require("groq-sdk");
+const { Resend } = require("resend");
+const storyBank = require("./storyBank");
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 module.exports = async (req, res) => {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  const { emails, childName, dims, chars } = req.body;
-  const resend = new Resend(process.env.RESEND_API_KEY);
-
-const systemPrompt = `You are Kahani, a master storyteller for young Indian children aged 2-4 years. You do not invent stories. Every story you tell must be sourced from real existing texts, traditions, or oral traditions — such as the Puranas, Mahabharata, Ramayana, Jataka Tales, Panchatantra, Aesop's Fables, Akbar-Birbal folk tales, Tenali Rama stories, stories of Indian freedom fighters, or well-known regional folk tales.
-
-STORY SOURCING RULES:
-- Every story must end with a source citation. Example: "📖 Source: Jataka Tales, Story #75 — The Monkey King" or "📖 Source: Bhagavata Purana, Canto 10, Chapter 8 — Baby Krishna and the butter pot"
-- If you are not 100% certain of the exact source, write: "📖 Source: (Not 100% certain of exact reference, but likely from [source name])"
-- Never fabricate a source. Accuracy is paramount.
-- Never fabricate a story and present it as mythology or historical fact.
-
-HERO ROTATION:
-- The user may mention preferred characters or themes. Treat these as gentle suggestions and inspiration, not strict requirements. A preference for Ganesha does not mean every story must feature Ganesha — it means the child enjoys that energy. Rotate freely across the full roster: Ganesha, Krishna, Hanuman, Rama, Sita, Draupadi, Tenali Rama, Birbal, Akbar, young Bhagat Singh, young Swami Vivekananda, young Savarkar, animals from Panchatantra and Jataka Tales, village folk, wise grandmothers, clever children.
-- Do not repeat the same hero in consecutive stories.
-- Not every story needs a grand hero — clever animals, witty ministers, and ordinary children make wonderful protagonists too.
-- ALWAYS prioritise stories that have a real, verifiable source from mythology, Puranas, folk traditions, or classic tale collections. Only if no suitable sourced story exists for the request should you adapt or retell in your own words — and clearly mark it as such.
-
-TONE AND STYLE:
-- Tone: Playful, dramatic, and warm. Every story should feel like it is being told around a fire by a beloved grandparent.
-- Humour: Include gentle, age-appropriate humour — funny faces, silly situations, unexpected twists. Mark these moments for the parent storyteller.
-- Language: Very simple words. Short sentences. Vivid imagery. Rhythm and repetition where possible.
-- Length: 150-200 words maximum.
-- Structure: Written in paragraphs, not bullet points.
-
-PARENT STORYTELLING CUES:
-- Include 1-2 cues in brackets for the parent telling the story. Examples: "(Make a big surprised face here!)", "(Roar like a lion!)", "(Whisper this part slowly...)", "(Pause here and look at your child with wide eyes)"
-- These cues should feel natural and fun, not forced.
-
-VIOLENCE AND SENSITIVITY:
-- Avoid disturbing or violent content entirely.
-- If a story of bravery naturally involves conflict, tone it down significantly for young children and add a note: "(This story involves a brave moment — keep your voice gentle and reassuring here)"
-
-MORAL DELIVERY:
-- End every story with a one-line moral, clearly labelled.
-- The moral should be simple enough for a 2-4 year old to understand when a parent explains it.
-- Format: "✨ Moral: [one line]"
-- Follow immediately with the source citation.
-
-OUTPUT FORMAT:
-[Story Title]
-
-[Story in paragraphs]
-
-(Parent cues woven in naturally)
-
-✨ Moral: [one line moral]
-
-📖 Source: [accurate citation or honest uncertainty note]`;
-
-  const prompt = `Write a bedtime story for a 2-4 year old child named ${childName || "the child"}.
-Character values to develop: ${dims || "kindness and courage"}.
-Favourite characters or themes: ${chars || "animals"}.
-Themes: Indian mythology, animals, or moral tales.
-Rules:
-- 150-200 words max
-- Very simple, soothing language
-- End with: Moral: [one line]
-Format: Title first, then story, then moral. No markdown.`;
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const aiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        max_tokens: 1000,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: prompt }
-        ]
-      })
-    });
-    const aiData = await aiResponse.json();
-    const story = aiData.choices?.[0]?.message?.content || "Could not generate story.";
+    const { parentName, parentEmail, childName, childAge, values, characters } = req.body;
 
-    const validEmails = emails.filter(e => e && e.trim() !== '');
-    for (const email of validEmails) {
-      await resend.emails.send({
-        from: 'Kahani <onboarding@resend.dev>',
-        to: email,
-        subject: `Tonight's Kahani for ${childName || 'your little one'}`,
-        html: `
-          <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; background: #0c0e1e; color: #f0e0c0; padding: 40px; border-radius: 16px;">
-            <h1 style="text-align: center; font-size: 28px; margin-bottom: 4px;">Kahani</h1>
-            <p style="text-align: center; color: #a09080; margin-bottom: 32px; font-size: 14px;">Tonight's story for ${childName || 'your little one'}</p>
-            <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 28px; white-space: pre-wrap; line-height: 1.9; font-size: 15px;">
-              ${story}
-            </div>
-            <p style="text-align: center; color: #a09080; margin-top: 32px; font-size: 12px;">Put the phone down. Look them in the eyes. Tell the story.</p>
-          </div>
-        `,
-      });
-    }
-    res.status(200).json({ success: true, story });
-  } catch(e) {
-    res.status(500).json({ error: e.message });
+    if (!parentEmail) return res.status(400).json({ error: "Email is required" });
+
+    // Pick a random story from the bank
+    const story = storyBank[Math.floor(Math.random() * storyBank.length)];
+
+    const prompt = `You are a warm, gentle storyteller helping a parent read a bedtime story to their child.
+
+Here is the child's details:
+- Name: ${childName || "little one"}
+- Age: ${childAge || "3"} years old
+- Values the parent cares about: ${values || "kindness, courage"}
+- Favourite characters: ${characters || "none specified"}
+
+Here is the original story — do NOT change the plot, characters, moral, or source. Only simplify the language so a ${childAge || "3"}-year-old can understand it when a parent reads it aloud. Keep all the interactive cues (in parentheses) exactly as they are.
+
+Story title: ${story.title}
+Source: ${story.source}
+Moral: ${story.moral}
+
+Story:
+${story.content}
+
+---
+
+Now rewrite this story in simpler, warmer words for a ${childAge || "3"}-year-old. Address the child as "${childName || "little one"}" once at the start. Keep it short — under 300 words. Keep the moral, the interactive cues, and the ending intact. Do not invent new plot points.
+
+End with:
+🌙 Moral: ${story.moral}
+📖 Source: ${story.source}`;
+
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 600,
+      temperature: 0.5,
+    });
+
+    const storyText = completion.choices[0]?.message?.content || "Story generation failed.";
+
+    // Format email HTML
+    const paragraphs = storyText
+      .split("\n")
+      .filter((line) => line.trim() !== "")
+      .map((line) => {
+        if (line.startsWith("(") && line.endsWith(")")) {
+          return `<p style="color:#b45309;font-style:italic;margin:12px 0;">${line}</p>`;
+        }
+        if (line.startsWith("🌙") || line.startsWith("📖")) {
+          return `<p style="color:#6b7280;font-size:13px;margin:6px 0;">${line}</p>`;
+        }
+        return `<p style="margin:10px 0;line-height:1.7;">${line}</p>`;
+      })
+      .join("");
+
+    const html = `
+    <div style="font-family:Georgia,serif;max-width:600px;margin:auto;padding:32px;background:#fffbf5;border-radius:12px;">
+      <h1 style="font-size:22px;color:#92400e;text-align:center;">🌙 Kahani</h1>
+      <p style="color:#78716c;text-align:center;font-size:14px;">Welcome, ${parentName || "Friend"}! Here's your first story for ${childName || "your little one"}.</p>
+      <hr style="border:none;border-top:1px solid #e7e5e4;margin:20px 0;" />
+      <h2 style="font-size:18px;color:#1c1917;">${story.title}</h2>
+      ${paragraphs}
+      <hr style="border:none;border-top:1px solid #e7e5e4;margin:24px 0;" />
+      <p style="font-size:12px;color:#a8a29e;text-align:center;">
+        You'll receive stories daily at your chosen time.<br/>
+        Kahani — real stories from India, told with love.<br/>
+        <a href="https://kahani-liard.vercel.app" style="color:#b45309;">Visit Kahani</a>
+      </p>
+    </div>`;
+
+    await resend.emails.send({
+      from: "Kahani <stories@kahani-liard.vercel.app>",
+      to: parentEmail,
+      subject: `🌙 Welcome to Kahani — Here's your first story: ${story.title}`,
+      html,
+    });
+
+    res.status(200).json({ success: true, title: story.title });
+  } catch (err) {
+    console.error("Send story error:", err);
+    res.status(500).json({ error: "Failed to send story." });
   }
 };
