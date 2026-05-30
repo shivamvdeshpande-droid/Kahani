@@ -115,7 +115,7 @@ module.exports = async (req, res) => {
         const html = formatEmailHtml(parentName, childName, title, text);
 
         await resend.emails.send({
-          from: "Kahani <stories@kahani-liard.vercel.app>",
+          from: "Kahani <stories@kahani.space>",
           to: parentEmail,
           subject: `🌙 Tonight's story: ${title}`,
           html,

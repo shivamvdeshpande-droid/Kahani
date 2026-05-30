@@ -106,7 +106,7 @@ End with:
     // Send to all emails (email1 and optionally email2)
     for (const email of emails) {
       await resend.emails.send({
-        from: "Kahani <onboarding@resend.dev>",
+        from: "Kahani <stories@kahani.space>",
         to: email,
         subject: `🌙 Welcome to Kahani — Here's your first story: ${story.title}`,
         html,
