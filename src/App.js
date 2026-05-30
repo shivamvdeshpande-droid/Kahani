@@ -199,11 +199,7 @@ const SLOT_LABELS = {
           emails: validEmails,
           childName: childName || 'your little one',
           dims: dimLabels,
-                  }),
-      });
-      const data = await res.json();
-      setStatus("active");
-chars: charLabels,
+          chars: charLabels,
           language,
         }),
       });
