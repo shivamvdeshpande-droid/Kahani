@@ -312,7 +312,7 @@ const SLOT_LABELS = {
       </Section>
 
       {/* Language */}
-      <Section title="Your mother tongue (stories will be generated in English — you deliver in this language)">
+      <Section title="Your mother tongue">
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {LANGUAGES.map(l => (
             <Toggle
