@@ -106,17 +106,25 @@ function Toggle({ selected, onToggle, label, emoji, sub }) {
   );
 }
 
-function Section({ title, children }) {
+function Section({ title, icon, children }) {
   return (
-    <div style={{ marginBottom: 28 }}>
-      <p style={{
-        fontFamily: "'DM Sans', sans-serif",
-        fontSize: 10,
-        letterSpacing: "0.14em",
-        textTransform: "uppercase",
-        color: "rgba(200,170,120,0.55)",
-        marginBottom: 12,
-      }}>{title}</p>
+    <div style={{
+      marginBottom: 16,
+      background: "rgba(255,255,255,0.025)",
+      border: "1px solid rgba(255,255,255,0.07)",
+      borderRadius: 20,
+      padding: "18px 18px 18px",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        {icon && <span style={{ fontSize: 20 }}>{icon}</span>}
+        <p style={{
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: 10,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: "rgba(200,170,120,0.55)",
+        }}>{title}</p>
+      </div>
       {children}
     </div>
   );
@@ -241,7 +249,7 @@ const SLOT_LABELS = {
       </div>
 
       {/* Child's name */}
-      <Section title="Your child's name">
+      <Section title="Your child's name" icon="👶">
         <input
           className="inp"
           placeholder="e.g. Arjun, Aanya…"
@@ -252,7 +260,7 @@ const SLOT_LABELS = {
       </Section>
 
       {/* Character dimensions */}
-      <Section title="Values you want to nurture (pick up to 3)">
+      <Section title="Values you want to nurture (pick up to 3)" icon="🌱">
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {CHARACTER_DIMS.map(d => (
             <Toggle
@@ -267,22 +275,45 @@ const SLOT_LABELS = {
       </Section>
 
       {/* Favourite characters */}
-      <Section title="Your child's favourite characters / themes">
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+      <Section title="Story world — who should appear?" icon="✨">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
           {FAV_CHARACTERS.map(c => (
-            <Toggle
+            <button
               key={c.id}
-              selected={chars.includes(c.id)}
-              onToggle={() => toggle(chars, setChars, c.id)}
-              label={c.label}
-              emoji={c.emoji}
-            />
+              onClick={() => toggle(chars, setChars, c.id)}
+              disabled={isActive}
+              style={{
+                background: chars.includes(c.id) ? "rgba(232,168,56,0.18)" : "rgba(255,255,255,0.04)",
+                border: chars.includes(c.id) ? "1.5px solid #E8A838" : "1.5px solid rgba(255,255,255,0.08)",
+                borderRadius: 16,
+                padding: "12px 6px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 6,
+                cursor: "pointer",
+                transition: "all 0.18s",
+              }}
+            >
+              <span style={{ fontSize: 28 }}>{c.emoji}</span>
+              <span style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 10,
+                color: chars.includes(c.id) ? "#E8A838" : "rgba(200,170,120,0.6)",
+                fontWeight: chars.includes(c.id) ? 500 : 300,
+                textAlign: "center",
+                lineHeight: 1.3,
+              }}>{c.label}</span>
+              {chars.includes(c.id) && (
+                <span style={{ fontSize: 10, color: "#E8A838" }}>✓</span>
+              )}
+            </button>
           ))}
         </div>
       </Section>
 
       {/* Storytime — multi select */}
-      <Section title="Storytime slots (select all that apply — one story sent 30 min before each)">
+      <Section title="When should we send it?" icon="⏰">
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {STORY_TIMES.map(t => (
             <Toggle
@@ -312,7 +343,7 @@ const SLOT_LABELS = {
       </Section>
 
       {/* Language */}
-      <Section title="Your mother tongue">
+      <Section title="Your mother tongue" icon="🗣️">
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {LANGUAGES.map(l => (
             <Toggle
@@ -327,7 +358,7 @@ const SLOT_LABELS = {
       </Section>
 
       {/* Emails */}
-      <Section title="Deliver to">
+      <Section title="Deliver to" icon="📬">
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <input className="inp" type="email" placeholder="Your email" value={email1} onChange={e => setEmail1(e.target.value)} disabled={isActive} />
           <input className="inp" type="email" placeholder="Partner's email (optional)" value={email2} onChange={e => setEmail2(e.target.value)} disabled={isActive} />
