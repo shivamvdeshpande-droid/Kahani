@@ -91,8 +91,11 @@ module.exports = async (req, res) => {
 
   try {
     // Fetch all active subscribers from Airtable
+    const slot = req.body?.slot || "bedtime";
+    console.log(`Running cron for slot: ${slot}`);
+
     const records = await base("Subscribers")
-      .select({ filterByFormula: `{Status} = "active"` })
+      .select({ filterByFormula: `AND({Active} = TRUE(), FIND("${slot}", {StoryTimes}))` })
       .all();
 
     console.log(`Found ${records.length} active subscribers`);

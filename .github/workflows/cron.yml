@@ -2,18 +2,35 @@ name: Kahani Daily Stories
 
 on:
   workflow_dispatch:
+    inputs:
+      slot:
+        description: 'Story slot (lunch/evening/dinner/bedtime)'
+        required: false
+        default: 'bedtime'
   schedule:
-    - cron: '0 6 * * *'
-    - cron: '0 11 * * *'
-    - cron: '0 13 * * *'
-    - cron: '0 15 * * *'
+    - cron: '0 6 * * *'    # 11:30 AM IST — lunch
+    - cron: '0 11 * * *'   # 4:30 PM IST — evening
+    - cron: '0 13 * * *'   # 6:30 PM IST — dinner
+    - cron: '0 15 * * *'   # 9:00 PM IST — bedtime
 
 jobs:
   send-stories:
     runs-on: ubuntu-latest
     steps:
+      - name: Determine slot from UTC hour
+        id: slot
+        run: |
+          HOUR=$(date -u +%H)
+          if [ "$HOUR" = "06" ]; then SLOT="lunch"
+          elif [ "$HOUR" = "11" ]; then SLOT="evening"
+          elif [ "$HOUR" = "13" ]; then SLOT="dinner"
+          else SLOT="bedtime"
+          fi
+          echo "slot=$SLOT" >> $GITHUB_OUTPUT
+
       - name: Trigger Kahani cron
         run: |
           curl -X POST "https://kahani-liard.vercel.app/api/cron_send" \
           -H "Authorization: Bearer kahani2024secret" \
-          -H "Content-Type: application/json"
+          -H "Content-Type: application/json" \
+          -d "{\"slot\": \"${{ steps.slot.outputs.slot }}\"}"
