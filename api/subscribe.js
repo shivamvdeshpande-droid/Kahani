@@ -20,8 +20,7 @@ module.exports = async (req, res) => {
         ChildName: childName || '',
         Dims: dims || '',
         Chars: chars || '',
-                Language: language || 'English',
-StoryTimes: storyTimes,
+        StoryTimes: storyTimes,
         Language: language || 'English',
         Active: true,
       }
