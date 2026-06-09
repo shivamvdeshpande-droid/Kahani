@@ -104,14 +104,16 @@ module.exports = async (req, res) => {
 
     for (const record of records) {
       const fields = record.fields;
-      const parentName = fields["Parent Name"] || "Friend";
-      const parentEmail = fields["Email"];
-      const childName = fields["Child Name"] || "little one";
-      const childAge = fields["Child Age"] || "3";
-      const values = fields["Values"] || "kindness, courage";
-      const characters = fields["Characters"] || "";
+      const parentName = fields["Email1"] || "Friend";
+      const parentEmail = fields["Email1"];
+      const parentEmail2 = fields["Email2"] || null;
+      const childName = fields["ChildName"] || "little one";
+      const childAge = "3";
+      const values = fields["Dims"] || "kindness, courage";
+      const characters = fields["Chars"] || "";
 
       if (!parentEmail) continue;
+      const emailsToSend = [parentEmail, parentEmail2].filter(e => e && e.trim() !== '');
 
       try {
         const { text, title } = await generateStory(childName, childAge, values, characters);
@@ -119,7 +121,7 @@ module.exports = async (req, res) => {
 
         await resend.emails.send({
           from: "Kahani <stories@kahani.space>",
-          to: parentEmail,
+          to: emailsToSend,
           subject: `🌙 Tonight's story: ${title}`,
           html,
         });
