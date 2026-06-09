@@ -95,7 +95,7 @@ module.exports = async (req, res) => {
     console.log(`Running cron for slot: ${slot}`);
 
     const records = await base("Subscribers")
-      .select({ filterByFormula: `FIND("${slot}", {StoryTimes})` })
+      .select({})
       .all();
 
     console.log(`Found ${records.length} active subscribers`);
